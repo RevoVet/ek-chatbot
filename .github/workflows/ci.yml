@@ -10,19 +10,6 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         python-version: [3.8, 3.9, 3.10]
 
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
     - uses: actions/checkout@v2
 
@@ -31,12 +18,22 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Set up PostgreSQL service
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get -yqq install postgresql
+        sudo systemctl start postgresql
+        sudo -u postgres psql -c "CREATE DATABASE testdb;"
+        sudo -u postgres psql -c "CREATE USER testuser WITH PASSWORD 'testpass';"
+        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE testdb TO testuser;"
+
     - name: Install dependencies
       run: |
         poetry install
 
     - name: Run Tests
       env:
-        DATABASE_URI: postgresql://postgres:postgres@localhost:5432/postgres
+        DATABASE_URI: postgresql://testuser:testpass@localhost:5432/testdb
       run: |
         poetry run pytest
+      if: matrix.os == 'ubuntu-latest'
