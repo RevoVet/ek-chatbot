@@ -1,0 +1,1 @@
+![CI](https://github.com/RevoVet/ek-chatbot/actions/workflows/ci.yml/badge.svg)
