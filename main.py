@@ -5,6 +5,8 @@ from psycopg2.extras import RealDictCursor
 from fastapi.responses import JSONResponse
 
 
+from ek_chatbot.chat_engine import generate_response
+
 
 app = FastAPI()
 
@@ -29,6 +31,12 @@ def read_products():
     cur.close()
     conn.close()
     return products
+
+
+@app.post("/chat")
+async def chat(user_input: str):
+    response = await generate_response(user_input)
+    return {"response": response}
 
 
 # for local development, need to adjust for python
